@@ -1,9 +1,14 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/bankdb
-    username: postgres
-    password: admin
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bankdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 5
+      minimum-idle: 1
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -11,9 +16,20 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  sql:
+    init:
+      mode: always
+
 server:
-  port: 8080
-  context-path: /api
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -21,7 +37,9 @@ springdoc:
   api-docs:
     path: /v3/api-docs
     enabled: true
+
 logging:
   level:
     org.springframework.web: DEBUG
     org.springdoc: DEBUG
+    com.banco: TRACE
