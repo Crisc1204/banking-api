@@ -1,24 +1,21 @@
 package com.banco.banking_api.domain.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.math.BigDecimal;
-import java.util.UUID;
 
+@Getter
+@Setter
 public class Account {
-    private String id;
-    private String customerId;
+    private Long id;
+    private String owner;
     private BigDecimal balance;
-
-    public Account(String customerId) {
-        this.id = UUID.randomUUID().toString();
-        this.customerId = customerId;
-        this.balance = BigDecimal.ZERO;
-    }
 
     public void deposit(BigDecimal amount) {
         this.balance = this.balance.add(amount);
     }
 
-    public String getId() { return id; }
-    public String getCustomerId() { return customerId; }
+    public Long getId() { return id; }
     public BigDecimal getBalance() { return balance; }
 }

@@ -1,38 +1,40 @@
 package com.banco.banking_api;
 
+import com.banco.banking_api.application.service.AccountService;
 import com.banco.banking_api.domain.model.Account;
+import com.banco.banking_api.domain.port.out.AccountRepositoryPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
 
-    @Mock
-    AccountRepository accountRepo;
-    @Mock TransactionRepository transactionRepo;
-    @InjectMocks
-    AccountServiceImpl service;
 
     @Test
-    void transfer_ShouldMoveFunds_WhenBalanceIsSufficient() {
-        Account from = new Account(1L, "Juan", 500.0);
-        Account to = new Account(2L, "Ana", 200.0);
-        when(accountRepo.findById(1L)).thenReturn(Optional.of(from));
-        when(accountRepo.findById(2L)).thenReturn(Optional.of(to));
+    void shouldReturnAccountById() {
+        AccountRepositoryPort repo = mock(AccountRepositoryPort.class);
+        AccountService service = new AccountService(repo);
 
-        service.transfer(1L, 2L, 100.0);
+        Account account = new Account();
+        account.setId(1L);
+        account.setOwner("Magnus");
+        account.setBalance(new BigDecimal("1000"));
 
-        verify(accountRepo).save(from);
-        verify(accountRepo).save(to);
-        verify(transactionRepo).save(any());
+        when(repo.findById(1L)).thenReturn(Optional.of(account));
+
+        Optional<Account> result = service.getById(1L);
+        assertTrue(result.isPresent());
+        assertEquals("Magnus", result.get().getOwner());
     }
 }
