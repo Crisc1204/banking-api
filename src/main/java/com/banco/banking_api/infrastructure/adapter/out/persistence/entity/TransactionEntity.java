@@ -1,10 +1,7 @@
-package com.banco.banking_api.infrastructure.adapter.out.persistence;
+package com.banco.banking_api.infrastructure.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,9 +9,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "transactions")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 public class TransactionEntity {
 
     @Id

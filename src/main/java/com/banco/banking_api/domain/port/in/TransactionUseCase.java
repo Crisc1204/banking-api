@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface TransactionUseCase {
     Transaction createTransaction(Transaction transaction);
-
     List<Transaction> getTransactionsByAccount(Long accountId);
+    List<Transaction> getAllTransactions();
+    void deleteTransaction(Long id);
 }

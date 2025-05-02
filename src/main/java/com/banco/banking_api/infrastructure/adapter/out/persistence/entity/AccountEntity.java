@@ -1,4 +1,4 @@
-package com.banco.banking_api.infrastructure.adapter.out.persistence;
+package com.banco.banking_api.infrastructure.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,9 +8,11 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "accounts")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 public class AccountEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

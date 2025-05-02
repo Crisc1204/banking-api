@@ -1,11 +1,13 @@
 package com.banco.banking_api.infrastructure.adapter.out.mapper;
 
 import com.banco.banking_api.domain.model.Transaction;
-import com.banco.banking_api.infrastructure.adapter.out.persistence.TransactionEntity;
+import com.banco.banking_api.infrastructure.adapter.out.persistence.entity.TransactionEntity;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TransactionMapper {
 
-    public static TransactionEntity toEntity(Transaction transaction) {
+    public TransactionEntity toEntity(Transaction transaction) {
         return TransactionEntity.builder()
                 .id(transaction.getId())
                 .accountId(transaction.getAccountId())
@@ -15,13 +17,13 @@ public class TransactionMapper {
                 .build();
     }
 
-    public static Transaction toDomain(TransactionEntity entity) {
-        Transaction transaction = new Transaction();
-        transaction.setId(entity.getId());
-        transaction.setAccountId(entity.getAccountId());
-        transaction.setAmount(entity.getAmount());
-        transaction.setType(entity.getType());
-        transaction.setDate(entity.getDate());
-        return transaction;
+    public Transaction toDomain(TransactionEntity entity) {
+        return Transaction.builder()
+                .id(entity.getId())
+                .accountId(entity.getAccountId())
+                .amount(entity.getAmount())
+                .type(entity.getType())
+                .date(entity.getDate())
+                .build();
     }
 }
