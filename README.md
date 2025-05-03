@@ -34,6 +34,22 @@ src
 └── MainApplication.java   # Punto de entrada
 ```
 
+## Diagrama de Arquitectura Hexagonal
+![Arquitectura Hexagonal](/diagrams/Diagrama_arquitectura.png)
+
+## Explicación:
+- Verde: Capa de transporte (HTTP/REST).
+- Azul: Controladores (adaptadores de entrada).
+- Amarillo: Casos de uso (lógica de negocio).
+- Morado: Puertos de repositorio.
+- Gris: Base de datos (adaptador de salida).
+
+## Diagrama Entidad-Relación
+![Diagrama ER](diagrams/Base_de_datos.png)
+
+## Flujo de Solicitud
+![Sequence Diagram](/diagrams/Flujo_de_solicitud.png)
+
 ## Configuración de Variables de Entorno
 
 La conexión a la base de datos se gestiona mediante variables de entorno:
@@ -95,6 +111,7 @@ Ejecuta todas las pruebas unitarias con:
 
 ```bash
 ./mvnw test
+./mvnw jacoco:report
 ```
 ## Supuestos
 
