@@ -12,14 +12,13 @@ FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-RUN groupadd -r spring && useradd -r -g spring spring \
-    && mkdir -p /app \
+RUN groupadd -r spring && useradd --no-log-init -r -g spring spring \
+    && mkdir -p /app/logs \
     && chown -R spring:spring /app
+
 USER spring
 
 COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
-
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+AlwaysPreTouch"
 
 EXPOSE 8080
 

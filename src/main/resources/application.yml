@@ -1,13 +1,18 @@
 spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bankdb}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:admin}
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:bankdb}?sslmode=disable&connectionTimeout=30000
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
     hikari:
-      connection-timeout: 30000
+      connection-timeout: 60000
+      initialization-fail-timeout: 60000
       maximum-pool-size: 5
       minimum-idle: 1
+      pool-name: BankingHikariCP
 
   jpa:
     hibernate:
@@ -23,16 +28,37 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
 
 server:
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
     enabled: true
   api-docs:
     path: /v3/api-docs
@@ -40,6 +66,13 @@ springdoc:
 
 logging:
   level:
-    org.springframework.web: DEBUG
-    org.springdoc: DEBUG
-    com.banco: TRACE
+    root: INFO
+    org.springframework: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.zaxxer.hikari: TRACE
+    com.banco: DEBUG
+  file:
+    name: logs/application.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
