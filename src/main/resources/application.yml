@@ -2,8 +2,11 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
+  config:
+    activate:
+      on-profile: local
   datasource:
-    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:bankdb}?sslmode=disable&connectionTimeout=30000
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bankdb}?sslmode=disable&connectionTimeout=30000
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
@@ -12,7 +15,8 @@ spring:
       initialization-fail-timeout: 60000
       maximum-pool-size: 5
       minimum-idle: 1
-      pool-name: BankingHikariCP
+      pool-name: BankingHikariCP-Local
+      leak-detection-threshold: 30000
 
   jpa:
     hibernate:
@@ -25,6 +29,8 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+        temp:
+          use_jdbc_metadata_defaults: false
 
   sql:
     init:
@@ -53,6 +59,8 @@ management:
       enabled: true
     diskspace:
       enabled: true
+    readinessstate:
+      enabled: true
 
 springdoc:
   swagger-ui:
@@ -70,9 +78,40 @@ logging:
     org.springframework: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    com.zaxxer.hikari: TRACE
+    com.zaxxer.hikari: DEBUG
     com.banco: DEBUG
   file:
     name: logs/application.log
+    max-size: 10MB
+    max-history: 7
   pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    hikari:
+      connection-timeout: 30000
+      initialization-fail-timeout: 120000
+      maximum-pool-size: 5
+      minimum-idle: 1
+      pool-name: BankingHikariCP-Docker
+      leak-detection-threshold: 60000
+      validation-timeout: 5000
+      max-lifetime: 1800000
+      keepalive-time: 30000
