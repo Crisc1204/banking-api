@@ -8,7 +8,7 @@ pipeline {
 		SONAR_SERVER = 'SonarQube'
         SONAR_LOGIN  = credentials('sonarqube-token')
         // Definimos la imagen de Docker que usaremos para construir
-        BUILDER_IMAGE = 'maven:3.9.6-eclipse-temurin-21'
+        BUILDER_IMAGE = 'mi-maven-builder:latest'
     }
 
     stages {
