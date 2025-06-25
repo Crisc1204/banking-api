@@ -1,5 +1,5 @@
 pipeline {
-	agent any
+	agent any // El checkout se hace en el agente principal
     stages {
 		stage('Checkout Code') {
 			steps {
@@ -10,11 +10,15 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Verify Maven Wrapper') {
-			steps {
-				echo 'Verificando que mvnw es ejecutable...'
-                // Este comando es seguro y no compila nada, solo muestra la versión de Maven.
-                sh './mvnw --version'
+        stage('Build inside Docker') {
+			// Ahora, este stage específico se ejecutará dentro del contenedor Docker
+            agent {
+				docker { image 'maven:3.9.6-eclipse-temurin-21' }
+            }
+            steps {
+				echo 'Dentro del contenedor Docker. Compilando el proyecto...'
+                // Ahora ejecutamos el build completo
+                sh './mvnw clean install -DskipTests' // Saltamos tests por ahora para ir más rápido
             }
         }
     }
