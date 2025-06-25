@@ -26,7 +26,7 @@ pipeline {
 				// Aquí está la magia: Usamos Scripted Pipeline dentro de Declarative
                 script {
 					// Le decimos a Docker que use la imagen que definimos
-                    docker.image(BUILDER_IMAGE).inside {
+                    docker.image(BUILDER_IMAGE).inside('--network devops_network') {
 						// Todos los comandos dentro de este bloque se ejecutan DENTRO del contenedor
                         echo 'Ejecutando build, pruebas y análisis de SonarQube...'
 
