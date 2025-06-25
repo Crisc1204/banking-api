@@ -1,35 +1,53 @@
 pipeline {
-	agent any // El pipeline se inicia en el agente principal de Jenkins
+	// Definimos el agente principal para todo el pipeline.
+    // Este agente es el contenedor de Jenkins que ya hemos preparado con el cliente de Docker.
+    agent any
+
+    // Definimos las variables de entorno para todo el pipeline
+    environment {
+		SONAR_SERVER = 'SonarQube'
+        SONAR_LOGIN  = credentials('sonarqube-token')
+        // Definimos la imagen de Docker que usaremos para construir
+        BUILDER_IMAGE = 'maven:3.9.6-eclipse-temurin-21'
+    }
 
     stages {
-		stage('Build & Analyze') {
-			// Este stage se ejecuta dentro de un contenedor Docker limpio
-            agent {
-				docker { image 'maven:3.9.6-eclipse-temurin-21' }
-            }
-            steps {
-				// Hacemos el checkout del código dentro del contenedor
+		stage('Checkout Code') {
+			steps {
+				// Limpiamos cualquier workspace anterior para asegurar un estado limpio
+                cleanWs()
+                // Clonamos el código en el workspace del agente principal
                 checkout scm
+            }
+        }
 
-                echo 'Ejecutando build, pruebas y análisis de SonarQube...'
-                environment {
-					SONAR_LOGIN = credentials('sonarqube-token')
-                }
-                withSonarQubeEnv('SonarQube') {
-					sh """
-                        ./mvnw clean verify sonar:sonar \
-                          -Dsonar.projectKey=banking-api \
-                          -Dsonar.host.url=http://sonarqube:9000 \
-                          -Dsonar.login=${SONAR_LOGIN}
-                    """
+        stage('Build, Test & Analyze') {
+			steps {
+				// Aquí está la magia: Usamos Scripted Pipeline dentro de Declarative
+                script {
+					// Le decimos a Docker que use la imagen que definimos
+                    docker.image(BUILDER_IMAGE).inside {
+						// Todos los comandos dentro de este bloque se ejecutan DENTRO del contenedor
+                        echo 'Ejecutando build, pruebas y análisis de SonarQube...'
+
+                        // withSonarQubeEnv se encarga de la conexión
+                        withSonarQubeEnv(SONAR_SERVER) {
+							sh """
+                                ./mvnw clean verify sonar:sonar \
+                                  -Dsonar.projectKey=banking-api \
+                                  -Dsonar.host.url=http://sonarqube:9000 \
+                                  -Dsonar.login=${SONAR_LOGIN}
+                            """
+                        }
+                    } // El contenedor se detiene y se elimina automáticamente al salir de este bloque
                 }
             }
         }
 
         stage('Quality Gate') {
-			// Este stage se ejecuta de nuevo en el agente principal
-            steps {
-				echo 'Esperando por el Quality Gate de SonarQube...'
+			steps {
+				// Este paso se ejecuta de nuevo en el agente principal (agent any)
+                echo 'Esperando por el Quality Gate de SonarQube...'
                 timeout(time: 1, unit: 'MINUTES') {
 					waitForQualityGate abortPipeline: true
                 }
@@ -37,16 +55,13 @@ pipeline {
         }
 
         stage('Build Image & Deploy App') {
-			// Este stage también se ejecuta en el agente principal para tener acceso a Docker y docker-compose
-            steps {
-				echo 'Construyendo imagen final y desplegando...'
+			steps {
+				// Este paso también se ejecuta en el agente principal
+                echo 'Construyendo imagen final y desplegando...'
 
-                // Hacemos el checkout de nuevo en este agente para tener los Dockerfiles.
-                // Es la forma más segura de asegurar que los archivos están presentes.
-                checkout scm
+                // No necesitamos otro checkout, el workspace del agente principal ya tiene el código.
 
                 // Usamos docker-compose para construir la imagen de la app y levantar los servicios.
-                // El --build solo reconstruirá el servicio 'banking-api' si es necesario.
                 sh 'docker-compose -f docker-compose.yml up -d --build banking-api'
             }
         }
@@ -54,7 +69,8 @@ pipeline {
 
     post {
 		always {
-			// Limpia el workspace al final de la ejecución.
+			// Este cleanWs() se ejecuta al final en el agente principal
+            echo 'Limpiando el workspace al final del pipeline...'
             cleanWs()
         }
     }
