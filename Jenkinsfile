@@ -1,49 +1,33 @@
 pipeline {
     // Definimos el agente que ejecutará el pipeline.
+    // Esta imagen ya contiene JDK 21 y Maven.
     agent {
         docker { image 'maven:3.9.6-eclipse-temurin-21' }
     }
 
-    tools {
-        // Nos aseguramos de tener SonarQube Scanner configurado en Manage Jenkins > Global Tool Configuration
-        // con el nombre 'SonarScanner'
-        jdk 'jdk17'
-        maven 'maven3'
-    }
-
     environment {
-        // El nombre del servidor SonarQube que configuramos en Manage Jenkins > Configure System
+        // El nombre del servidor SonarQube que configuraste en Manage Jenkins > Configure System
         SONAR_SERVER = 'SonarQube'
-        // El nombre de la credencial que contiene el token de SonarQube
-        SONAR_LOGIN = credentials('jenkins')
+        // El nombre de la credencial que contiene tu token de SonarQube.
+        // Asegúrate de que esta credencial exista en Jenkins con este ID exacto.
+        SONAR_LOGIN = credentials('sonarqube-token')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Clona el código de tu repositorio Git
                 echo 'Clonando el repositorio...'
                 checkout scm
             }
         }
 
-        stage('Compile & Test with Coverage') {
+        stage('Compile, Test & Analyze') {
             steps {
-                // Compila, ejecuta pruebas y genera el informe de cobertura con JaCoCo.
-                // Usamos 'install' para asegurar que todos los pasos del ciclo de vida se ejecuten.
-                // El comando 'prepare-agent' de JaCoCo se ejecuta automáticamente.
-                echo 'Compilando y ejecutando pruebas...'
-                sh './mvnw clean install'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                // Ejecuta el análisis de SonarQube
-                echo 'Iniciando análisis de SonarQube...'
+                echo 'Ejecutando build y análisis de SonarQube...'
+                // Unificamos la compilación, pruebas y análisis en un solo comando de Maven.
                 withSonarQubeEnv(SONAR_SERVER) {
                     sh """
-                        ./mvnw sonar:sonar \
+                        ./mvnw clean verify sonar:sonar \
                           -Dsonar.projectKey=banking-api \
                           -Dsonar.host.url=http://sonarqube:9000 \
                           -Dsonar.login=${SONAR_LOGIN}
@@ -54,8 +38,6 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                // Espera el resultado del análisis de SonarQube y falla el pipeline si no cumple.
-                // El timeout es por si SonarQube tarda en procesar el informe.
                 echo 'Esperando por el Quality Gate de SonarQube...'
                 timeout(time: 1, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -63,34 +45,28 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            // Este paso necesita acceso al demonio de Docker.
-            // Lo ejecutamos en un agente diferente que tenga Docker instalado.
+        stage('Build & Deploy') {
+            // Este stage necesita acceso a Docker, por lo que no puede correr dentro del
+            // contenedor de Maven. Usamos un agente diferente.
             agent any // Usa el agente principal de Jenkins, que tiene acceso al socket de Docker.
 
             steps {
-                echo 'Construyendo la imagen Docker...'
-                // Usamos el build number de Jenkins como tag para un versionado único.
+                echo 'Construyendo imagen Docker y desplegando con Docker Compose...'
                 script {
+                    // Primero construimos la imagen de la app.
+                    // Usamos el build number de Jenkins como tag para un versionado único.
                     def imageName = "banking-api:${env.BUILD_NUMBER}"
-                    docker.build(imageName, '.')
-                }
-            }
-        }
+                    docker.build(imageName, "--build-arg APP_VERSION=${env.BUILD_NUMBER} -f Dockerfile .")
 
-        stage('Deploy Application') {
-            agent any
-            steps {
-                echo 'Desplegando la aplicación con Docker Compose...'
-                // Ejecuta tu docker-compose.yml para levantar la app y la BBDD.
-                // Esto detendrá y reemplazará cualquier versión anterior que esté corriendo.
-                sh 'docker-compose -f docker-compose.yml up -d --build banking-api'
+                    // Ahora, usamos docker-compose para desplegar.
+                    // El --build solo reconstruirá el servicio 'banking-api'
+                    sh 'docker-compose -f docker-compose.yml up -d --build banking-api'
+                }
             }
         }
     }
 
     post {
-        // Siempre, al final del pipeline (falle o no), limpia el workspace.
         always {
             cleanWs()
         }
