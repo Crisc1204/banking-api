@@ -59,7 +59,7 @@ pipeline {
                 // No necesitamos otro checkout, el workspace del agente principal ya tiene el código.
 
                 // Usamos docker-compose para construir la imagen de la app y levantar los servicios.
-                sh 'docker-compose -f docker-compose.yml up -d --build banking-api'
+                sh 'docker compose -f docker-compose.yml up -d --build banking-api'
             }
         }
     }
