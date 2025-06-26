@@ -29,7 +29,7 @@ public class AccountRepositoryAdapter implements AccountRepositoryPort {
 
     @Override
     public List<Account> findAll() {
-        return jpa.findAll().stream().map(accountMapper::toDomain).collect(Collectors.toList());
+        return jpa.findAll().stream().map(accountMapper::toDomain).toList();
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.banco.banking_api.domain.port.in;
 
 import com.banco.banking_api.domain.model.Account;
-import com.banco.banking_api.domain.model.Transaction;
 
 import java.util.List;
 import java.util.Optional;

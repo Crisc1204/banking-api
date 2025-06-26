@@ -28,7 +28,7 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
         return jpaRepository.findByAccountId(accountId)
                 .stream()
                 .map(transactionMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -36,7 +36,7 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
         return jpaRepository.findAll()
                 .stream()
                 .map(transactionMapper::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
