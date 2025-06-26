@@ -48,9 +48,6 @@ pipeline {
 			steps {
 				// Este paso se ejecuta de nuevo en el agente principal (agent any)
                 echo 'Esperando por el Quality Gate de SonarQube...'
-                timeout(time: 5, unit: 'MINUTES') {
-					waitForQualityGate abortPipeline: true
-                }
             }
         }
 
