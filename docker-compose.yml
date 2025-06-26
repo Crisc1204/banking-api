@@ -38,13 +38,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bankdb?sslmode=disable
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: admin
-      SERVER_PORT: "8080"
+      SERVER_PORT: "8090"
     ports:
-      - "8080:8080"
+      - "8090:8090"
     networks:
       - bank-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/api/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
